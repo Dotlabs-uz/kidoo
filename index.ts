@@ -1,8 +1,12 @@
+import 'react-native-url-polyfill/auto';
 import { registerRootComponent } from 'expo';
+import { ExpoRoot } from 'expo-router';
+import React from 'react';
 
-import App from './App';
+function App() {
+  // @ts-expect-error require.context is a webpack/metro API not in TS types
+  const ctx = require.context('./app');
+  return React.createElement(ExpoRoot, { context: ctx });
+}
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
 registerRootComponent(App);
