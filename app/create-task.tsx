@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AvatarCircle } from '../components/AvatarCircle';
 import { Btn } from '../components/Btn';
@@ -21,24 +21,33 @@ export default function CreateTaskScreen() {
   const [stars, setStars] = useState(2);
   const [icon, setIcon] = useState('🧹');
   const [childId, setChildId] = useState<string>('all');
+  const [busy, setBusy] = useState(false);
 
-  const handleSave = () => {
-    const base = {
-      id: 't' + Date.now(),
-      family_id: 'f1',
-      title, description: desc, due, stars, icon,
-      color: Colors.primary, status: 'pending' as const,
-    };
+  const handleSave = async () => {
+    if (!title.trim()) return;
+    setBusy(true);
+    try {
+      const base = {
+        id: 't' + Date.now(),
+        family_id: '',
+        title: title.trim(), description: desc, due, stars, icon,
+        color: Colors.primary, status: 'pending' as const,
+      };
 
-    if (childId === 'all') {
-      children.forEach((c, i) => {
-        addTask({ ...base, id: 't' + Date.now() + i, child_id: c.id });
-      });
-    } else {
-      addTask({ ...base, child_id: childId });
+      if (childId === 'all') {
+        await Promise.all(children.map((c, i) =>
+          addTask({ ...base, id: 't' + Date.now() + i, child_id: c.id })
+        ));
+      } else {
+        await addTask({ ...base, child_id: childId });
+      }
+
+      router.back();
+    } catch (err: any) {
+      Alert.alert('Ошибка', err.message ?? 'Не удалось создать задание');
+    } finally {
+      setBusy(false);
     }
-
-    router.back();
   };
 
   return (
@@ -114,7 +123,7 @@ export default function CreateTaskScreen() {
         )}
 
         <View style={{ height: 8 }} />
-        <Btn label="Создать задание" disabled={!title} onPress={handleSave} style={{ width: '100%' }} />
+        <Btn label="Создать задание" loading={busy} disabled={!title.trim()} onPress={handleSave} style={{ width: '100%' }} />
       </ScrollView>
     </SafeAreaView>
   );

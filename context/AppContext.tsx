@@ -11,6 +11,7 @@ interface Celebration {
 interface AppState {
   loading: boolean;
   mode: 'parent' | 'child' | null;
+  parentEmail: string;
 
   family: Family;
   children: Child[];
@@ -21,7 +22,9 @@ interface AppState {
   showLock: boolean;
 
   registerParent: (name: string, email: string, password: string) => Promise<void>;
-  loginAsChild: (code: string, name: string, avatar: string) => Promise<{ error?: string }>;
+  loginParent: (email: string, password: string) => Promise<void>;
+  verifyParentPassword: (password: string) => Promise<boolean>;
+  loginAsChild: (code: string, childId: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
 
   setFamily: (f: Family) => void;
@@ -45,6 +48,7 @@ const AppContext = createContext<AppState | null>(null);
 export function AppProvider({ children: reactChildren }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<'parent' | 'child' | null>(null);
+  const [parentEmail, setParentEmail] = useState('');
   const [family, setFamilyState] = useState<Family>(EMPTY_FAMILY);
   const [childrenList, setChildrenList] = useState<Child[]>([]);
   const [activeChildId, setActiveChildId] = useState<string>('');
@@ -77,6 +81,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
         const { data: fam } = await supabase.from('families').select('*').eq('user_id', session.user.id).single();
         if (fam) {
           await loadFamilyData(fam.id);
+          setParentEmail(session.user.email ?? '');
           setMode('parent');
           setLoading(false);
           return;
@@ -105,6 +110,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
         const { data: fam } = await supabase.from('families').select('*').eq('user_id', session.user.id).single();
         if (fam) {
           await loadFamilyData(fam.id);
+          setParentEmail(session.user.email ?? '');
           setMode('parent');
         }
       } else if (event === 'SIGNED_OUT') {
@@ -145,28 +151,24 @@ export function AppProvider({ children: reactChildren }: { children: React.React
     setMode('parent');
   };
 
-  const loginAsChild = async (code: string, name: string, avatar: string): Promise<{ error?: string }> => {
+  const loginParent = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    setParentEmail(email);
+  };
+
+  const verifyParentPassword = async (password: string): Promise<boolean> => {
+    if (!parentEmail) return false;
+    const { error } = await supabase.auth.signInWithPassword({ email: parentEmail, password });
+    return !error;
+  };
+
+  const loginAsChild = async (code: string, childId: string): Promise<{ error?: string }> => {
     const { data: fam, error } = await supabase.from('families').select('*').eq('code', code).single();
     if (error || !fam) return { error: 'Семья не найдена. Проверь код.' };
 
-    // Find existing child by name in this family, or create new
-    const { data: existing } = await supabase
-      .from('children')
-      .select('*')
-      .eq('family_id', fam.id)
-      .eq('name', name)
-      .maybeSingle();
-
-    let kid = existing;
-    if (!kid) {
-      const { data: newKid, error: kidErr } = await supabase
-        .from('children')
-        .insert({ family_id: fam.id, name, avatar, stars: 0, streak: 0 })
-        .select('*')
-        .single();
-      if (kidErr) return { error: 'Ошибка создания профиля.' };
-      kid = newKid;
-    }
+    const { data: kid } = await supabase.from('children').select('*').eq('id', childId).maybeSingle();
+    if (!kid) return { error: 'Профиль не найден.' };
 
     await storage.saveChild({ familyId: fam.id, childId: kid.id });
     await loadFamilyData(fam.id);
@@ -187,7 +189,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
   // ── Data mutations ────────────────────────────────────────────────────────
 
   const addTask = async (task: Task) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .insert({
         family_id: family.id,
@@ -202,6 +204,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
       })
       .select('*')
       .single();
+    if (error) throw error;
     if (data) setTasks(prev => [data, ...prev]);
   };
 
@@ -273,9 +276,9 @@ export function AppProvider({ children: reactChildren }: { children: React.React
 
   return (
     <AppContext.Provider value={{
-      loading, mode,
+      loading, mode, parentEmail,
       family, children: childrenList, child, tasks, rewards, celebration, showLock,
-      registerParent, loginAsChild, logout,
+      registerParent, loginParent, verifyParentPassword, loginAsChild, logout,
       setFamily, setChild, addChild, setCelebration, setShowLock,
       addTask, approveTask, completeChildTask, addReward, deleteReward, claimPrize,
     }}>

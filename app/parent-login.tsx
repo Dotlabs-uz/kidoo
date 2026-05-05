@@ -1,29 +1,27 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../components/Btn';
 import { Icon } from '../components/Icon';
 import { useApp } from '../context/AppContext';
 import { Colors } from '../lib/colors';
 
-export default function ParentRegisterScreen() {
+export default function ParentLoginScreen() {
   const router = useRouter();
-  const { registerParent } = useApp();
-  const [name, setName] = useState('');
+  const { loginParent } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const handleCreate = async () => {
-    if (!name.trim() || !email.trim() || !password) return;
+  const handleLogin = async () => {
+    if (!email.trim() || !password) return;
     setBusy(true);
     try {
-      await registerParent(name.trim(), email.trim(), password);
-      router.push('/family-code');
+      await loginParent(email.trim(), password);
+      router.replace('/(parent)/tasks');
     } catch (err: any) {
-      Alert.alert('Ошибка', err.message ?? 'Не удалось создать аккаунт');
+      Alert.alert('Ошибка входа', err.message ?? 'Неверный email или пароль');
     } finally {
       setBusy(false);
     }
@@ -37,17 +35,8 @@ export default function ParentRegisterScreen() {
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Создать семью</Text>
-        <Text style={styles.sub}>Зарегистрируйтесь, чтобы добавлять задания и награды</Text>
-
-        <Text style={styles.label}>Имя</Text>
-        <TextInput
-          style={styles.field}
-          value={name}
-          onChangeText={setName}
-          placeholder="Ваше имя"
-          placeholderTextColor={Colors.ink4}
-        />
+        <Text style={styles.title}>Войти</Text>
+        <Text style={styles.sub}>Введите данные от вашего аккаунта</Text>
 
         <Text style={styles.label}>Email</Text>
         <TextInput
@@ -57,6 +46,7 @@ export default function ParentRegisterScreen() {
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          autoCorrect={false}
           placeholderTextColor={Colors.ink4}
         />
 
@@ -65,25 +55,23 @@ export default function ParentRegisterScreen() {
           style={styles.field}
           value={password}
           onChangeText={setPassword}
-          placeholder="Минимум 6 символов"
+          placeholder="Ваш пароль"
           secureTextEntry
           placeholderTextColor={Colors.ink4}
         />
 
         <View style={{ height: 28 }} />
         <Btn
-          label="Создать семью"
+          label="Войти"
           loading={busy}
-          disabled={!name.trim() || !email.trim() || password.length < 6}
-          onPress={handleCreate}
+          disabled={!email.trim() || password.length < 1}
+          onPress={handleLogin}
           style={{ width: '100%' }}
         />
 
-        <Text style={styles.hint}>После регистрации появится семейный код для детей</Text>
-
-        <TouchableOpacity onPress={() => router.replace('/parent-login')} style={styles.loginLink}>
-          <Text style={styles.loginLinkText}>Уже есть аккаунт? </Text>
-          <Text style={[styles.loginLinkText, { color: Colors.primary, fontWeight: '800' }]}>Войти</Text>
+        <TouchableOpacity onPress={() => router.replace('/parent-register')} style={styles.switchRow}>
+          <Text style={styles.switchText}>Нет аккаунта? </Text>
+          <Text style={[styles.switchText, { color: Colors.primary, fontWeight: '800' }]}>Зарегистрироваться</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -107,7 +95,6 @@ const styles = StyleSheet.create({
     borderWidth: 2, borderColor: Colors.line, borderRadius: 18,
     fontSize: 16, fontWeight: '600', color: Colors.ink, marginBottom: 16,
   },
-  hint: { textAlign: 'center', fontSize: 12, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 18 },
-  loginLink: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
-  loginLinkText: { fontSize: 14, fontWeight: '600', color: Colors.ink2 },
+  switchRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  switchText: { fontSize: 14, fontWeight: '600', color: Colors.ink2 },
 });

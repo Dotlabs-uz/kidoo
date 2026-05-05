@@ -11,12 +11,14 @@ import { useApp } from '../../context/AppContext';
 import { Colors } from '../../lib/colors';
 import { Task } from '../../types';
 
-const BADGES = [
-  { e: '🌟', t: 'Первое\nзадание', got: true },
-  { e: '🚀', t: '5 в\nнеделю',    got: true },
-  { e: '🏆', t: '10 звёзд',        got: true },
-  { e: '👑', t: '50 звёзд',        got: false },
-];
+function getBadges(totalDone: number, totalEarned: number) {
+  return [
+    { e: '🌟', t: 'Первое\nзадание', got: totalDone >= 1 },
+    { e: '🚀', t: '5 заданий',       got: totalDone >= 5 },
+    { e: '🏆', t: '10 звёзд',        got: totalEarned >= 10 },
+    { e: '👑', t: '50 звёзд',        got: totalEarned >= 50 },
+  ];
+}
 
 function ProfileStat({ icon, num, label, color, wide }: { icon: string; num: number | string; label: string; color: string; wide?: boolean }) {
   return (
@@ -57,9 +59,11 @@ export default function ChildProfileScreen() {
   const router = useRouter();
   const { child, tasks, showLock, setShowLock, logout } = useApp();
 
-  const totalDone = tasks.filter(t => t.status === 'done' && t.child_id === child.id).length;
-  const totalEarned = tasks.filter(t => t.status === 'done' && t.child_id === child.id).reduce((s, t) => s + t.stars, 0);
+  const doneTasks = tasks.filter(t => t.status === 'done' && t.child_id === child.id);
+  const totalDone = doneTasks.length;
+  const totalEarned = doneTasks.reduce((s, t) => s + t.stars, 0);
   const historyTasks = tasks.filter(t => (t.status === 'done' || t.status === 'review') && t.child_id === child.id);
+  const badges = getBadges(totalDone, totalEarned);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,7 +86,7 @@ export default function ChildProfileScreen() {
         {/* Achievements */}
         <Text style={styles.sectionTitle}>Значки</Text>
         <View style={styles.badgesGrid}>
-          {BADGES.map((b, i) => (
+          {badges.map((b, i) => (
             <View key={i} style={[styles.badge, !b.got && styles.badgeLocked]}>
               <Text style={[styles.badgeEmoji, !b.got && { opacity: 0.4 }]}>{b.e}</Text>
               <Text style={styles.badgeLabel}>{b.t}</Text>

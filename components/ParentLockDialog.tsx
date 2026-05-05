@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Animated, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useApp } from '../context/AppContext';
 import { Colors } from '../lib/colors';
 import { Btn } from './Btn';
 import { Icon } from './Icon';
@@ -10,12 +11,21 @@ interface ParentLockDialogProps {
 }
 
 export function ParentLockDialog({ onCancel, onUnlock }: ParentLockDialogProps) {
+  const { verifyParentPassword } = useApp();
   const [pass, setPass] = useState('');
   const [err, setErr] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const submit = () => {
-    if (pass.length >= 4) onUnlock();
-    else setErr(true);
+  const submit = async () => {
+    if (!pass) return;
+    setBusy(true);
+    const ok = await verifyParentPassword(pass);
+    setBusy(false);
+    if (ok) {
+      onUnlock();
+    } else {
+      setErr(true);
+    }
   };
 
   return (
@@ -25,20 +35,22 @@ export function ParentLockDialog({ onCancel, onUnlock }: ParentLockDialogProps) 
           <Icon name="lock" size={30} color={Colors.primary} />
         </View>
         <Text style={styles.title}>Только для взрослых</Text>
-        <Text style={styles.sub}>Введите пароль родителя</Text>
+        <Text style={styles.sub}>Введите пароль от аккаунта родителя</Text>
         <TextInput
           style={[styles.input, err && { borderColor: Colors.danger }]}
           secureTextEntry
           value={pass}
           onChangeText={t => { setPass(t); setErr(false); }}
-          placeholder="••••"
-          keyboardType="numeric"
-          maxLength={6}
+          placeholder="••••••"
           autoFocus
+          editable={!busy}
         />
-        {err && <Text style={styles.err}>Минимум 4 цифры</Text>}
+        {err && <Text style={styles.err}>Неверный пароль</Text>}
         <View style={{ height: 12 }} />
-        <Btn label="Войти" onPress={submit} style={{ marginBottom: 8 }} />
+        {busy
+          ? <ActivityIndicator color={Colors.primary} style={{ marginBottom: 8 }} />
+          : <Btn label="Войти" onPress={submit} disabled={!pass} style={{ marginBottom: 8 }} />
+        }
         <Btn label="Отмена" variant="ghost" onPress={onCancel} small />
       </View>
     </View>

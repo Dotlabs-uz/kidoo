@@ -41,7 +41,7 @@ function ChildTaskCard({ task, onComplete }: { task: Task; onComplete: (id: stri
 export default function ChildTasksScreen() {
   const router = useRouter();
   const { child, tasks, completeChildTask, celebration, setCelebration, showLock, setShowLock } = useApp();
-  const pending = tasks.filter(t => t.status === 'pending');
+  const pending = tasks.filter(t => t.status === 'pending' && t.child_id === child.id);
 
   return (
     <SafeAreaView style={styles.container}>

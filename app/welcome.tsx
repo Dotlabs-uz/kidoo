@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../components/Btn';
 import { Icon } from '../components/Icon';
@@ -50,6 +50,11 @@ export default function WelcomeScreen() {
 
         <Btn label="👨‍👩‍👧  Я родитель" onPress={() => router.push('/parent-register')} style={styles.btn} />
         <Btn label="🧒  Я ребёнок" variant="success" onPress={() => router.push('/child-login')} style={styles.btn} />
+
+        <TouchableOpacity onPress={() => router.push('/parent-login')} style={styles.loginLink}>
+          <Text style={styles.loginLinkText}>Уже есть аккаунт? </Text>
+          <Text style={[styles.loginLinkText, { color: Colors.primary, fontWeight: '800' }]}>Войти</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -89,4 +94,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '900', textAlign: 'center', marginBottom: 6, color: Colors.ink },
   subtitle: { fontSize: 15, fontWeight: '600', color: Colors.ink2, textAlign: 'center', marginBottom: 24 },
   btn: { width: '100%', marginBottom: 14 },
+  loginLink: { flexDirection: 'row', justifyContent: 'center', marginTop: 4 },
+  loginLinkText: { fontSize: 14, fontWeight: '600', color: Colors.ink2 },
 });

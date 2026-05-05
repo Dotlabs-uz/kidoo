@@ -7,18 +7,21 @@ import { Btn } from '../components/Btn';
 import { Icon } from '../components/Icon';
 import { Mascot } from '../components/Mascot';
 import { useApp } from '../context/AppContext';
-import { AVATARS, Colors } from '../lib/colors';
+import { Colors } from '../lib/colors';
 import { supabase } from '../lib/supabase';
+import { Child } from '../types';
 
 export default function ChildLoginScreen() {
   const router = useRouter();
   const { loginAsChild } = useApp();
   const [step, setStep] = useState(0);
   const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [name, setName] = useState('');
-  const [avatar, setAvatar] = useState('fox');
+  const [familyChildren, setFamilyChildren] = useState<Child[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [busy, setBusy] = useState(false);
   const inputs = useRef<(TextInput | null)[]>([]);
+
+  const codeStr = code.join('');
 
   const setDigit = (i: number, v: string) => {
     if (!/^\d?$/.test(v)) return;
@@ -34,23 +37,30 @@ export default function ChildLoginScreen() {
 
   const codeFilled = code.every(c => c !== '');
 
-  // Validate code before going to step 2
   const handleCodeNext = async () => {
     if (!codeFilled) return;
     setBusy(true);
-    const { data, error } = await supabase.from('families').select('id').eq('code', code.join('')).maybeSingle();
-    setBusy(false);
-    if (error || !data) {
+    const { data: fam } = await supabase.from('families').select('id').eq('code', codeStr).maybeSingle();
+    if (!fam) {
+      setBusy(false);
       Alert.alert('Неверный код', 'Такой семьи не существует. Попроси родителя проверить код.');
       return;
     }
+    const { data: kids } = await supabase.from('children').select('*').eq('family_id', fam.id);
+    setBusy(false);
+    if (!kids || kids.length === 0) {
+      Alert.alert('Нет профилей', 'Родитель ещё не добавил детей. Попроси создать твой профиль.');
+      return;
+    }
+    setFamilyChildren(kids);
+    setSelectedChildId(kids[0].id);
     setStep(1);
   };
 
   const handleLogin = async () => {
-    if (!name.trim()) return;
+    if (!selectedChildId) return;
     setBusy(true);
-    const result = await loginAsChild(code.join(''), name.trim(), avatar);
+    const result = await loginAsChild(codeStr, selectedChildId);
     setBusy(false);
     if (result.error) {
       Alert.alert('Ошибка', result.error);
@@ -110,27 +120,28 @@ export default function ChildLoginScreen() {
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Как тебя зовут?</Text>
-        <Text style={styles.sub}>И выбери своего питомца!</Text>
+        <Text style={styles.title}>Это ты?</Text>
+        <Text style={styles.sub}>Выбери свой профиль</Text>
 
-        <TextInput
-          style={[styles.field, { marginBottom: 24 }]}
-          value={name}
-          onChangeText={setName}
-          placeholder="Твоё имя"
-          placeholderTextColor={Colors.ink4}
-        />
-
-        <Text style={styles.label}>Аватар</Text>
-        <View style={styles.avatarGrid}>
-          {AVATARS.map(av => (
+        <View style={styles.childGrid}>
+          {familyChildren.map(kid => (
             <TouchableOpacity
-              key={av.id}
-              onPress={() => setAvatar(av.id)}
-              style={[styles.avatarBtn, avatar === av.id && { backgroundColor: av.color + '22', borderColor: av.color }]}
+              key={kid.id}
+              onPress={() => setSelectedChildId(kid.id)}
+              style={[
+                styles.childCard,
+                selectedChildId === kid.id && styles.childCardActive,
+              ]}
             >
-              <AvatarCircle id={av.id} size={52} ring={avatar === av.id} />
-              <Text style={[styles.avatarName, avatar === av.id && { color: av.color }]}>{av.name}</Text>
+              <AvatarCircle id={kid.avatar} size={64} ring={selectedChildId === kid.id} />
+              <Text style={[styles.childName, selectedChildId === kid.id && { color: Colors.primary }]}>
+                {kid.name}
+              </Text>
+              {selectedChildId === kid.id && (
+                <View style={styles.checkBadge}>
+                  <Icon name="check" size={14} color="#fff" />
+                </View>
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -139,7 +150,7 @@ export default function ChildLoginScreen() {
           label="Поехали! 🚀"
           variant="success"
           loading={busy}
-          disabled={!name.trim()}
+          disabled={!selectedChildId}
           onPress={handleLogin}
           style={{ width: '100%' }}
         />
@@ -166,17 +177,17 @@ const styles = StyleSheet.create({
     textAlign: 'center', fontSize: 26, fontWeight: '900', color: Colors.primary,
   },
   codeInputFilled: { borderColor: Colors.primary },
-  field: {
-    width: '100%', padding: 16, backgroundColor: '#fff',
-    borderWidth: 2, borderColor: Colors.line, borderRadius: 18,
-    fontSize: 18, fontWeight: '600', color: Colors.ink,
+  childGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 32, justifyContent: 'center' },
+  childCard: {
+    width: 110, paddingVertical: 20, paddingHorizontal: 10,
+    borderRadius: 24, borderWidth: 3, borderColor: Colors.line,
+    backgroundColor: '#fff', alignItems: 'center', gap: 10, position: 'relative',
   },
-  label: { fontSize: 14, fontWeight: '700', color: Colors.ink2, marginBottom: 12 },
-  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 },
-  avatarBtn: {
-    width: '30%', padding: 14, borderRadius: 22,
-    borderWidth: 3, borderColor: Colors.line, backgroundColor: '#fff',
-    alignItems: 'center', gap: 6,
+  childCardActive: { borderColor: Colors.primary, backgroundColor: Colors.primarySoft },
+  childName: { fontSize: 15, fontWeight: '800', color: Colors.ink, textAlign: 'center' },
+  checkBadge: {
+    position: 'absolute', top: 8, right: 8,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center',
   },
-  avatarName: { fontSize: 12, fontWeight: '800', color: Colors.ink3 },
 });
