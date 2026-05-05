@@ -1,53 +1,53 @@
 {
-  "expo": {
-    "name": "Bolajon",
-    "slug": "bolajon",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#EDE7FF"
-    },
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.bolajon.app",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSFaceIDUsageDescription": "Используется для защиты родительского режима"
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#EDE7FF"
-      },
-      "package": "com.bolajon.app",
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "scheme": "bolajon",
-    "plugins": [
-      "expo-router",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "deploymentTarget": "15.1"
-          }
-        }
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": ""
-      }
-    }
-  }
+	"expo": {
+		"name": "Kidoo",
+		"slug": "kidoo",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/icon.png",
+		"userInterfaceStyle": "light",
+		"newArchEnabled": true,
+		"splash": {
+			"image": "./assets/splash-icon.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#EDE7FF"
+		},
+		"ios": {
+			"supportsTablet": false,
+			"bundleIdentifier": "com.dotlabs.kidoo",
+			"buildNumber": "1",
+			"infoPlist": {
+				"NSFaceIDUsageDescription": "Используется для защиты родительского режима"
+			}
+		},
+		"android": {
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/adaptive-icon.png",
+				"backgroundColor": "#EDE7FF"
+			},
+			"package": "com.dotlabs.kidoo",
+			"edgeToEdgeEnabled": true,
+			"predictiveBackGestureEnabled": false
+		},
+		"web": {
+			"favicon": "./assets/favicon.png"
+		},
+		"scheme": "bolajon",
+		"plugins": [
+			"expo-router",
+			[
+				"expo-build-properties",
+				{
+					"ios": {
+						"deploymentTarget": "15.1"
+					}
+				}
+			]
+		],
+		"extra": {
+			"eas": {
+				"projectId": ""
+			}
+		}
+	}
 }
