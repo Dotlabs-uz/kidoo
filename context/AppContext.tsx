@@ -34,8 +34,11 @@ interface AppState {
   setShowLock: (v: boolean) => void;
 
   addTask: (task: Task) => Promise<void>;
+  updateTask: (task: Task) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
   approveTask: (id: string) => Promise<void>;
   completeChildTask: (id: string) => Promise<void>;
+  undoChildTask: (id: string) => Promise<void>;
   addReward: (reward: Reward) => Promise<void>;
   deleteReward: (id: string) => Promise<void>;
   claimPrize: (id: string) => Promise<void>;
@@ -201,6 +204,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
         stars: task.stars,
         due: task.due,
         status: 'pending',
+        repeat: task.repeat ?? null,
       })
       .select('*')
       .single();
@@ -208,9 +212,38 @@ export function AppProvider({ children: reactChildren }: { children: React.React
     if (data) setTasks(prev => [data, ...prev]);
   };
 
+  const updateTask = async (task: Task) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        title: task.title,
+        description: task.description ?? null,
+        icon: task.icon,
+        stars: task.stars,
+        due: task.due,
+        repeat: task.repeat ?? null,
+      })
+      .eq('id', task.id)
+      .select('*')
+      .single();
+    if (error) throw error;
+    if (data) setTasks(prev => prev.map(t => t.id === task.id ? data : t));
+  };
+
+  const deleteTask = async (id: string) => {
+    await supabase.from('tasks').delete().eq('id', id);
+    setTasks(prev => prev.filter(t => t.id !== id));
+  };
+
   const approveTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
     await supabase.from('tasks').update({ status: 'done' }).eq('id', id);
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'done' } : t));
+
+    if (task?.repeat) {
+      const newDue = task.repeat === 'daily' ? 'Сегодня' : 'Эта неделя';
+      await addTask({ ...task, id: 't' + Date.now(), status: 'pending', due: newDue });
+    }
   };
 
   const completeChildTask = async (id: string) => {
@@ -224,6 +257,17 @@ export function AppProvider({ children: reactChildren }: { children: React.React
     await supabase.from('children').update({ stars: newStars }).eq('id', child.id);
     setChildrenList(prev => prev.map(c => c.id === child.id ? { ...c, stars: newStars } : c));
     setCelebration({ stars: task.stars });
+  };
+
+  const undoChildTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task || !child.id) return;
+
+    const newStars = Math.max(0, child.stars - task.stars);
+    await supabase.from('tasks').update({ status: 'pending' }).eq('id', id);
+    await supabase.from('children').update({ stars: newStars }).eq('id', child.id);
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'pending' } : t));
+    setChildrenList(prev => prev.map(c => c.id === child.id ? { ...c, stars: newStars } : c));
   };
 
   const addReward = async (reward: Reward) => {
@@ -280,7 +324,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
       family, children: childrenList, child, tasks, rewards, celebration, showLock,
       registerParent, loginParent, verifyParentPassword, loginAsChild, logout,
       setFamily, setChild, addChild, setCelebration, setShowLock,
-      addTask, approveTask, completeChildTask, addReward, deleteReward, claimPrize,
+      addTask, updateTask, deleteTask, approveTask, completeChildTask, undoChildTask, addReward, deleteReward, claimPrize,
     }}>
       {reactChildren}
     </AppContext.Provider>

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../../components/Btn';
 import { CelebrationOverlay } from '../../components/CelebrationOverlay';
@@ -8,7 +8,7 @@ import { Icon } from '../../components/Icon';
 import { ParentLockDialog } from '../../components/ParentLockDialog';
 import { StarGroup } from '../../components/StarGroup';
 import { useApp } from '../../context/AppContext';
-import { Colors } from '../../lib/colors';
+import { CardShadow, Colors } from '../../lib/colors';
 import { Task } from '../../types';
 
 function StatCard({ num, label, color }: { num: number; label: string; color: string }) {
@@ -20,7 +20,12 @@ function StatCard({ num, label, color }: { num: number; label: string; color: st
   );
 }
 
-function TaskRow({ task, onApprove }: { task: Task; onApprove?: (id: string) => void }) {
+function TaskRow({ task, onApprove, onEdit, onDelete }: {
+  task: Task;
+  onApprove?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+}) {
   const badgeStyle = {
     pending: { bg: '#FFF1D6', text: '#A56500', label: 'Ожидает' },
     review:  { bg: '#FFE5EE', text: '#B82A6B', label: 'На проверку' },
@@ -38,6 +43,9 @@ function TaskRow({ task, onApprove }: { task: Task; onApprove?: (id: string) => 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Icon name="calendar" size={12} color={Colors.ink3} />
             <Text style={styles.taskDue}>{task.due}</Text>
+            {task.repeat && (
+              <Text style={styles.repeatBadge}>{task.repeat === 'daily' ? '🔁 ежедневно' : '📅 еженедельно'}</Text>
+            )}
           </View>
         </View>
         <StarGroup count={task.stars} size={16} />
@@ -46,9 +54,21 @@ function TaskRow({ task, onApprove }: { task: Task; onApprove?: (id: string) => 
         <View style={[styles.badge, { backgroundColor: badgeStyle.bg }]}>
           <Text style={[styles.badgeText, { color: badgeStyle.text }]}>{badgeStyle.label}</Text>
         </View>
-        {task.status === 'review' && (
-          <Btn label="Подтвердить ✓" variant="success" small onPress={() => onApprove?.(task.id)} />
-        )}
+        <View style={styles.actions}>
+          {task.status === 'review' && (
+            <Btn label="Подтвердить ✓" variant="success" small onPress={() => onApprove?.(task.id)} />
+          )}
+          {task.status === 'pending' && (
+            <>
+              <TouchableOpacity onPress={() => onEdit?.(task.id)} style={styles.actionBtn}>
+                <Icon name="edit" size={16} color={Colors.ink2} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => onDelete?.(task.id)} style={[styles.actionBtn, styles.actionBtnDanger]}>
+                <Icon name="trash" size={16} color={Colors.danger} />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -56,7 +76,14 @@ function TaskRow({ task, onApprove }: { task: Task; onApprove?: (id: string) => 
 
 export default function ParentTasksScreen() {
   const router = useRouter();
-  const { family, tasks, approveTask, celebration, setCelebration, showLock, setShowLock } = useApp();
+  const { family, tasks, approveTask, deleteTask, celebration, setCelebration, showLock, setShowLock } = useApp();
+
+  const handleDelete = (id: string) => {
+    Alert.alert('Удалить задание?', 'Это действие нельзя отменить.', [
+      { text: 'Отмена', style: 'cancel' },
+      { text: 'Удалить', style: 'destructive', onPress: () => deleteTask(id) },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,7 +113,15 @@ export default function ParentTasksScreen() {
           </Btn>
         </View>
 
-        {tasks.map(t => <TaskRow key={t.id} task={t} onApprove={approveTask} />)}
+        {tasks.map(t => (
+          <TaskRow
+            key={t.id}
+            task={t}
+            onApprove={approveTask}
+            onEdit={(id) => router.push(`/edit-task?id=${id}`)}
+            onDelete={handleDelete}
+          />
+        ))}
         <View style={{ height: 8 }} />
       </ScrollView>
 
@@ -109,16 +144,19 @@ const styles = StyleSheet.create({
   scroll: { padding: 20 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 18 },
   statCard: {
-    flex: 1, backgroundColor: '#fff', borderWidth: 2, borderColor: Colors.line,
+    flex: 1, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
     borderRadius: 18, paddingVertical: 12, alignItems: 'center',
+    ...CardShadow,
   },
   statNum: { fontSize: 26, fontWeight: '900', lineHeight: 28 },
   statLabel: { fontSize: 10, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', marginTop: 4 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontSize: 22, fontWeight: '800', color: Colors.ink },
   taskCard: {
-    backgroundColor: '#fff', borderRadius: 28, borderWidth: 2, borderColor: Colors.line,
-    padding: 16, marginBottom: 10, gap: 10,
+    backgroundColor: '#fff', borderRadius: 28,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
+    padding: 16, marginBottom: 10, gap: 10, ...CardShadow,
   },
   taskRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   taskIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -127,4 +165,12 @@ const styles = StyleSheet.create({
   taskFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },
+  repeatBadge: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  actionBtn: {
+    width: 34, height: 34, borderRadius: 11, backgroundColor: Colors.bg,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: Colors.line,
+  },
+  actionBtnDanger: { backgroundColor: '#FFF0F0', borderColor: '#FFCDD2' },
 });

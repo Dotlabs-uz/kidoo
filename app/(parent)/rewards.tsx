@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../../components/Btn';
 import { Icon } from '../../components/Icon';
 import { useApp } from '../../context/AppContext';
-import { Colors } from '../../lib/colors';
+import { CardShadow, Colors } from '../../lib/colors';
 import { Reward } from '../../types';
 
 function RewardRow({ reward, onDelete }: { reward: Reward; onDelete: (id: string) => void }) {
@@ -56,15 +56,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: {
     paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14,
-    backgroundColor: '#fff', borderBottomWidth: 2, borderBottomColor: Colors.line,
+    backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: Colors.line,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   headerCaption: { fontSize: 12, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.5 },
   headerTitle: { fontSize: 22, fontWeight: '800', color: Colors.ink },
   scroll: { padding: 20 },
   card: {
-    backgroundColor: '#fff', borderRadius: 28, borderWidth: 2, borderColor: Colors.line,
+    backgroundColor: '#fff', borderRadius: 28,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
     padding: 16, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 12,
+    ...CardShadow,
   },
   rewardIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   rewardTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 6 },

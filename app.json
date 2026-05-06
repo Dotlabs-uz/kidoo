@@ -32,7 +32,7 @@
 		"web": {
 			"favicon": "./assets/favicon.png"
 		},
-		"scheme": "bolajon",
+		"scheme": "kidoo",
 		"plugins": [
 			"expo-router",
 			[

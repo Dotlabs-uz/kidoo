@@ -1,4 +1,5 @@
 export type TaskStatus = 'pending' | 'review' | 'done';
+export type TaskRepeat = 'daily' | 'weekly' | null;
 
 export interface Family {
   id: string;
@@ -28,6 +29,7 @@ export interface Task {
   stars: number;
   due: string;
   status: TaskStatus;
+  repeat?: TaskRepeat;
   created_at?: string;
 }
 

@@ -8,7 +8,7 @@ import { Icon } from '../../components/Icon';
 import { ParentLockDialog } from '../../components/ParentLockDialog';
 import { StarGroup } from '../../components/StarGroup';
 import { useApp } from '../../context/AppContext';
-import { Colors } from '../../lib/colors';
+import { CardShadow, Colors } from '../../lib/colors';
 import { Task } from '../../types';
 
 function getBadges(totalDone: number, totalEarned: number) {
@@ -135,8 +135,9 @@ const styles = StyleSheet.create({
   statsGrid: { flexDirection: 'row', gap: 10, marginBottom: 10 },
   wideStatRow: { marginBottom: 18 },
   stat: {
-    flex: 1, backgroundColor: '#fff', borderWidth: 2, borderColor: Colors.line,
-    borderRadius: 22, padding: 16,
+    flex: 1, backgroundColor: '#fff',
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
+    borderRadius: 22, padding: 16, ...CardShadow,
   },
   statWide: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   statIcon: { fontSize: 30, lineHeight: 34, marginBottom: 6 },
@@ -145,16 +146,20 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 10 },
   badgesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 22 },
   badge: {
-    width: '22%', backgroundColor: '#fff', borderWidth: 2, borderColor: Colors.star,
+    width: '22%', backgroundColor: '#fff',
+    borderWidth: 1.5, borderColor: Colors.star,
     borderRadius: 18, paddingVertical: 12, paddingHorizontal: 6, alignItems: 'center', gap: 4,
+    ...CardShadow, shadowOpacity: 0.05,
   },
   badgeLocked: { borderColor: Colors.line, opacity: 0.5 },
   badgeEmoji: { fontSize: 30 },
   badgeLabel: { fontSize: 10, fontWeight: '800', color: Colors.ink2, textAlign: 'center', lineHeight: 14 },
 
   historyRow: {
-    backgroundColor: '#fff', borderRadius: 18, borderWidth: 2, borderColor: Colors.line,
+    backgroundColor: '#fff', borderRadius: 18,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
     padding: 12, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12,
+    ...CardShadow, shadowOpacity: 0.05,
   },
   historyIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   historyTitle: { fontSize: 15, fontWeight: '800', color: Colors.ink, marginBottom: 2 },
@@ -163,8 +168,9 @@ const styles = StyleSheet.create({
   reviewBadge: { backgroundColor: '#FFE5EE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
   reviewBadgeText: { fontSize: 10, fontWeight: '800', color: Colors.pink, textTransform: 'uppercase', letterSpacing: 0.3 },
   emptyHistory: {
-    backgroundColor: '#fff', borderRadius: 18, borderWidth: 2, borderColor: Colors.line,
-    padding: 20, alignItems: 'center', marginBottom: 8,
+    backgroundColor: '#fff', borderRadius: 18,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
+    padding: 20, alignItems: 'center', marginBottom: 8, ...CardShadow,
   },
   emptyHistoryText: { fontSize: 13, fontWeight: '600', color: Colors.ink3 },
 });

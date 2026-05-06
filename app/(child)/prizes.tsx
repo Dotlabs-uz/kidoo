@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../../components/Btn';
 import { Icon } from '../../components/Icon';
 import { useApp } from '../../context/AppContext';
-import { Colors } from '../../lib/colors';
+import { CardShadow, Colors } from '../../lib/colors';
 import { Reward } from '../../types';
 
 function RewardCard({ reward, stars, onClaim }: { reward: Reward; stars: number; onClaim: (id: string) => void }) {
@@ -74,22 +74,24 @@ export default function ChildPrizesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14,
-    backgroundColor: '#FFE5EE',
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16,
+    backgroundColor: Colors.tealDark,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  headerCaption: { fontSize: 12, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.5 },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: Colors.ink },
+  headerCaption: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 },
+  headerTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
   starPillBig: {
-    backgroundColor: Colors.star, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999,
-    shadowColor: Colors.starDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 4,
+    backgroundColor: Colors.star, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999,
+    ...CardShadow, shadowOpacity: 0.2, elevation: 4,
   },
-  starPillText: { fontSize: 22, fontWeight: '900', color: '#5A4515' },
-  scroll: { paddingHorizontal: 20, paddingTop: 6, paddingBottom: 20, backgroundColor: Colors.bg },
+  starPillText: { fontSize: 20, fontWeight: '900', color: '#5A4515' },
+  scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, backgroundColor: Colors.bg },
   card: {
-    backgroundColor: '#fff', borderRadius: 24, borderWidth: 2, borderColor: Colors.line, padding: 14, marginBottom: 12,
+    backgroundColor: '#fff', borderRadius: 24,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
+    padding: 14, marginBottom: 12, ...CardShadow,
   },
-  cardUnlocked: { borderColor: Colors.star },
+  cardUnlocked: { borderColor: Colors.teal, borderWidth: 1.5 },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   rewardIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   rewardTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 4 },
@@ -99,5 +101,5 @@ const styles = StyleSheet.create({
   unlockedText: { fontSize: 10, fontWeight: '800', color: '#1A8048', textTransform: 'uppercase', letterSpacing: 0.4 },
   lockIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.line, alignItems: 'center', justifyContent: 'center' },
   progressBar: { height: 12, backgroundColor: Colors.line, borderRadius: 999, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: Colors.star, borderRadius: 999 },
+  progressFill: { height: '100%', backgroundColor: Colors.teal, borderRadius: 999 },
 });

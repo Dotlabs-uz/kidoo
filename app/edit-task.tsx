@@ -1,8 +1,7 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AvatarCircle } from '../components/AvatarCircle';
 import { Btn } from '../components/Btn';
 import { Icon } from '../components/Icon';
 import { StarGroup } from '../components/StarGroup';
@@ -13,40 +12,35 @@ import { TaskRepeat } from '../types';
 const ICONS = ['🧹', '📚', '🛏️', '🦷', '🐕', '🥦', '🚿', '🧺'];
 const DUE_OPTIONS = ['Сегодня', 'Завтра', 'Эта неделя'];
 
-export default function CreateTaskScreen() {
+export default function EditTaskScreen() {
   const router = useRouter();
-  const { addTask, children } = useApp();
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-  const [due, setDue] = useState('Сегодня');
-  const [stars, setStars] = useState(2);
-  const [icon, setIcon] = useState('🧹');
-  const [childId, setChildId] = useState<string>('all');
-  const [repeat, setRepeat] = useState<TaskRepeat>(null);
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { tasks, updateTask } = useApp();
+
+  const task = tasks.find(t => t.id === id);
+
+  const [title, setTitle] = useState(task?.title ?? '');
+  const [desc, setDesc] = useState(task?.description ?? '');
+  const [due, setDue] = useState(task?.due ?? 'Сегодня');
+  const [stars, setStars] = useState(task?.stars ?? 2);
+  const [icon, setIcon] = useState(task?.icon ?? '🧹');
+  const [repeat, setRepeat] = useState<TaskRepeat>(task?.repeat ?? null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!task) router.back();
+  }, [task]);
+
+  if (!task) return null;
 
   const handleSave = async () => {
     if (!title.trim()) return;
     setBusy(true);
     try {
-      const base = {
-        id: 't' + Date.now(),
-        family_id: '',
-        title: title.trim(), description: desc, due, stars, icon, repeat,
-        color: Colors.primary, status: 'pending' as const,
-      };
-
-      if (childId === 'all') {
-        await Promise.all(children.map((c, i) =>
-          addTask({ ...base, id: 't' + Date.now() + i, child_id: c.id })
-        ));
-      } else {
-        await addTask({ ...base, child_id: childId });
-      }
-
+      await updateTask({ ...task, title: title.trim(), description: desc, due, stars, icon, repeat });
       router.back();
     } catch (err: any) {
-      Alert.alert('Ошибка', err.message ?? 'Не удалось создать задание');
+      Alert.alert('Ошибка', err.message ?? 'Не удалось сохранить');
     } finally {
       setBusy(false);
     }
@@ -58,7 +52,7 @@ export default function CreateTaskScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Icon name="back" size={20} color={Colors.ink2} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>Новое задание</Text>
+        <Text style={styles.topTitle}>Изменить задание</Text>
         <View style={{ width: 42 }} />
       </View>
 
@@ -99,31 +93,6 @@ export default function CreateTaskScreen() {
           ))}
         </View>
 
-        {children.length > 1 && (
-          <>
-            <Text style={styles.label}>Для кого</Text>
-            <View style={styles.childRow}>
-              <TouchableOpacity
-                onPress={() => setChildId('all')}
-                style={[styles.childBtn, childId === 'all' && styles.childBtnActive]}
-              >
-                <Text style={{ fontSize: 22 }}>👨‍👩‍👧</Text>
-                <Text style={[styles.childBtnLabel, childId === 'all' && { color: Colors.primary }]}>Всем</Text>
-              </TouchableOpacity>
-              {children.map(c => (
-                <TouchableOpacity
-                  key={c.id}
-                  onPress={() => setChildId(c.id)}
-                  style={[styles.childBtn, childId === c.id && styles.childBtnActive]}
-                >
-                  <AvatarCircle id={c.avatar} size={40} ring={childId === c.id} />
-                  <Text style={[styles.childBtnLabel, childId === c.id && { color: Colors.primary }]}>{c.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
-
         <Text style={styles.label}>Повтор</Text>
         <View style={styles.repeatRow}>
           {([null, 'daily', 'weekly'] as TaskRepeat[]).map((r) => {
@@ -142,7 +111,7 @@ export default function CreateTaskScreen() {
         </View>
 
         <View style={{ height: 8 }} />
-        <Btn label="Создать задание" loading={busy} disabled={!title.trim()} onPress={handleSave} style={{ width: '100%' }} />
+        <Btn label="Сохранить" loading={busy} disabled={!title.trim()} onPress={handleSave} style={{ width: '100%' }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -184,13 +153,6 @@ const styles = StyleSheet.create({
   },
   starBtnActive: { borderColor: '#FFC700', backgroundColor: '#FFF4D1' },
   starBtnLabel: { fontSize: 12, fontWeight: '800', color: Colors.ink3 },
-  childRow: { flexDirection: 'row', gap: 10, marginBottom: 24, flexWrap: 'wrap' },
-  childBtn: {
-    paddingVertical: 14, paddingHorizontal: 16, borderWidth: 2, borderColor: Colors.line,
-    borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', gap: 6, minWidth: 80,
-  },
-  childBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primarySoft },
-  childBtnLabel: { fontSize: 12, fontWeight: '800', color: Colors.ink3 },
   repeatRow: { flexDirection: 'column', gap: 8, marginBottom: 24 },
   repeatBtn: {
     paddingVertical: 14, paddingHorizontal: 16, borderWidth: 2, borderColor: Colors.line,

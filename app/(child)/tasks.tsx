@@ -10,7 +10,7 @@ import { Mascot } from '../../components/Mascot';
 import { ParentLockDialog } from '../../components/ParentLockDialog';
 import { StarGroup } from '../../components/StarGroup';
 import { useApp } from '../../context/AppContext';
-import { Colors } from '../../lib/colors';
+import { CardShadow, Colors } from '../../lib/colors';
 import { Task } from '../../types';
 
 function ChildTaskCard({ task, onComplete }: { task: Task; onComplete: (id: string) => void }) {
@@ -40,8 +40,9 @@ function ChildTaskCard({ task, onComplete }: { task: Task; onComplete: (id: stri
 
 export default function ChildTasksScreen() {
   const router = useRouter();
-  const { child, tasks, completeChildTask, celebration, setCelebration, showLock, setShowLock } = useApp();
+  const { child, tasks, completeChildTask, undoChildTask, celebration, setCelebration, showLock, setShowLock } = useApp();
   const pending = tasks.filter(t => t.status === 'pending' && t.child_id === child.id);
+  const inReview = tasks.filter(t => t.status === 'review' && t.child_id === child.id);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -54,7 +55,7 @@ export default function ChildTasksScreen() {
             <Text style={styles.name}>{child.name} 👋</Text>
           </View>
           <TouchableOpacity onPress={() => setShowLock(true)} style={styles.switchBtn}>
-            <Icon name="switch" size={20} color={Colors.primary} />
+            <Icon name="switch" size={20} color="rgba(255,255,255,0.85)" />
           </TouchableOpacity>
         </View>
 
@@ -86,10 +87,39 @@ export default function ChildTasksScreen() {
           <View style={styles.emptyCard}>
             <Mascot mood="happy" size={120} color={Colors.primary} />
             <Text style={styles.emptyTitle}>Заданий пока нет!</Text>
-            <Text style={styles.emptyText}>Бола отдыхает 💤{'\n'}Скоро появятся новые приключения</Text>
+            <Text style={styles.emptyText}>Пока всё чисто! 💤{'\n'}Скоро появятся новые приключения</Text>
           </View>
         ) : (
           pending.map(t => <ChildTaskCard key={t.id} task={t} onComplete={completeChildTask} />)
+        )}
+
+        {inReview.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>На проверке</Text>
+              <Text style={styles.sectionSub}>{inReview.length} ждут</Text>
+            </View>
+            {inReview.map(t => (
+              <View key={t.id} style={styles.reviewCard}>
+                <View style={styles.taskRow}>
+                  <View style={[styles.taskIcon, { backgroundColor: '#FFE5EE' }]}>
+                    <Text style={{ fontSize: 30 }}>{t.icon}</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.taskTitle}>{t.title}</Text>
+                    <Text style={styles.reviewStatus}>⏳ Ждёт одобрения родителя</Text>
+                  </View>
+                </View>
+                <Btn
+                  label="Отменить"
+                  variant="ghost"
+                  small
+                  onPress={() => undoChildTask(t.id)}
+                  style={{ width: '100%' }}
+                />
+              </View>
+            ))}
+          </>
         )}
 
         <View style={{ height: 4 }} />
@@ -103,37 +133,40 @@ export default function ChildTasksScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bg },
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14, backgroundColor: Colors.primarySoft },
+  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16, backgroundColor: Colors.tealDark },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  greeting: { fontSize: 12, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.5 },
-  name: { fontSize: 22, fontWeight: '800', color: Colors.ink },
+  greeting: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 },
+  name: { fontSize: 22, fontWeight: '800', color: '#fff' },
   switchBtn: {
-    width: 42, height: 42, borderRadius: 14, backgroundColor: '#fff',
-    shadowColor: Colors.line, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 0,
-    elevation: 2, alignItems: 'center', justifyContent: 'center',
+    width: 40, height: 40, borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
   },
   statsRow: { flexDirection: 'row', gap: 10 },
   starCard: {
     flex: 1, backgroundColor: Colors.star, borderRadius: 22,
     padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10,
-    shadowColor: Colors.starDark, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 4,
+    ...CardShadow, shadowOpacity: 0.2, elevation: 4,
   },
   starCount: { fontSize: 24, fontWeight: '900', color: '#5A4515', lineHeight: 26 },
   starLabel: { fontSize: 11, fontWeight: '800', color: '#8A6D14', textTransform: 'uppercase', letterSpacing: 0.4 },
   streakCard: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 22,
+    flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 22,
     padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10,
-    shadowColor: Colors.line, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 4,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
   },
-  streakCount: { fontSize: 24, fontWeight: '900', color: '#FF6B3D', lineHeight: 26 },
-  streakLabel: { fontSize: 11, fontWeight: '800', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.4 },
-  scroll: { paddingHorizontal: 20, paddingTop: 6, paddingBottom: 20, backgroundColor: Colors.bg },
+  streakCount: { fontSize: 24, fontWeight: '900', color: '#fff', lineHeight: 26 },
+  streakLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.4 },
+  scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, backgroundColor: Colors.bg },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, marginTop: 6 },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: Colors.ink },
   sectionSub: { fontSize: 12, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.5 },
   taskCard: {
-    backgroundColor: '#fff', borderRadius: 26, borderWidth: 2, borderColor: Colors.line,
+    backgroundColor: '#fff', borderRadius: 26,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
     padding: 16, marginBottom: 12, gap: 12,
+    ...CardShadow,
   },
   taskRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   taskIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -146,7 +179,17 @@ const styles = StyleSheet.create({
   },
   starPillText: { fontSize: 12, fontWeight: '800', color: '#8A6D14' },
   taskDue: { fontSize: 12, color: Colors.ink3, fontWeight: '700' },
-  emptyCard: { backgroundColor: '#fff', borderRadius: 28, borderWidth: 2, borderColor: Colors.line, padding: 30, alignItems: 'center' },
+  emptyCard: {
+    backgroundColor: '#fff', borderRadius: 28,
+    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
+    padding: 30, alignItems: 'center', ...CardShadow,
+  },
+  reviewCard: {
+    backgroundColor: '#FFF8FA', borderRadius: 26,
+    borderWidth: 1.5, borderColor: '#FFD6E7',
+    padding: 16, marginBottom: 12, gap: 12, opacity: 0.9,
+  },
+  reviewStatus: { fontSize: 12, fontWeight: '700', color: Colors.pink, marginTop: 2 },
   emptyTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 6, marginTop: 8 },
   emptyText: { fontSize: 13, fontWeight: '600', color: Colors.ink2, textAlign: 'center', lineHeight: 20 },
 });
