@@ -11,7 +11,7 @@ interface IconProps {
 }
 
 export function Icon({ name, size = 24, color, active = false, mode = 'parent' }: IconProps) {
-  const c = color ?? (active ? (mode === 'child' ? Colors.success : Colors.primary) : Colors.ink3);
+  const c = color ?? (active ? Colors.purple : Colors.ink3);
   const sw = 2.4;
   const props = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: c, strokeWidth: sw, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Btn } from '../../components/Btn';
+import { GradientScreen } from '../../components/GradientScreen';
 import { Icon } from '../../components/Icon';
 import { useApp } from '../../context/AppContext';
 import { CardShadow, Colors } from '../../lib/colors';
@@ -47,52 +48,56 @@ function RewardCard({ reward, stars, onClaim }: { reward: Reward; stars: number;
 }
 
 export default function ChildPrizesScreen() {
+  const insets = useSafeAreaInsets();
   const { child, rewards, claimPrize } = useApp();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerCaption}>Магазин ⭐</Text>
-          <Text style={styles.headerTitle}>Мои призы</Text>
+    <GradientScreen>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerCaption}>Магазин</Text>
+            <Text style={styles.headerTitle}>Мои призы</Text>
+          </View>
+          <View style={styles.starPill}>
+            <Text style={{ fontSize: 16 }}>⭐</Text>
+            <Text style={styles.starPillText}>{child.stars}</Text>
+          </View>
         </View>
-        <View style={styles.starPillBig}>
-          <Text style={styles.starPillText}>⭐ {child.stars}</Text>
-        </View>
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {rewards.map(r => (
-          <RewardCard key={r.id} reward={r} stars={child.stars} onClaim={claimPrize} />
-        ))}
-        <View style={{ height: 8 }} />
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 110 }]} showsVerticalScrollIndicator={false}>
+          {rewards.map(r => (
+            <RewardCard key={r.id} reward={r} stars={child.stars} onClaim={claimPrize} />
+          ))}
+          <View style={{ height: 16 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </GradientScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16,
-    backgroundColor: Colors.tealDark,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 20,
   },
-  headerCaption: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5 },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
-  starPillBig: {
-    backgroundColor: Colors.star, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999,
-    ...CardShadow, shadowOpacity: 0.2, elevation: 4,
+  headerCaption: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 2 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  starPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 999,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)',
   },
-  starPillText: { fontSize: 20, fontWeight: '900', color: '#5A4515' },
-  scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, backgroundColor: Colors.bg },
+  starPillText: { fontSize: 17, fontWeight: '800', color: '#fff' },
+
+  scroll: { paddingHorizontal: 20, paddingBottom: 24 },
+
   card: {
-    backgroundColor: '#fff', borderRadius: 24,
-    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
-    padding: 14, marginBottom: 12, ...CardShadow,
+    backgroundColor: '#fff', borderRadius: 24, padding: 16, marginBottom: 12, ...CardShadow,
   },
-  cardUnlocked: { borderColor: Colors.teal, borderWidth: 1.5 },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  cardUnlocked: { borderWidth: 2, borderColor: Colors.success },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   rewardIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   rewardTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 4 },
   progressMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -100,6 +105,6 @@ const styles = StyleSheet.create({
   unlockedBadge: { backgroundColor: '#DFFBE9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   unlockedText: { fontSize: 10, fontWeight: '800', color: '#1A8048', textTransform: 'uppercase', letterSpacing: 0.4 },
   lockIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: Colors.line, alignItems: 'center', justifyContent: 'center' },
-  progressBar: { height: 12, backgroundColor: Colors.line, borderRadius: 999, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: Colors.teal, borderRadius: 999 },
+  progressBar: { height: 10, backgroundColor: Colors.line, borderRadius: 999, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: Colors.success, borderRadius: 999 },
 });

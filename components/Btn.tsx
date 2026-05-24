@@ -3,7 +3,7 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, TouchableOpacityProps, ViewStyle } from 'react-native';
 import { Colors } from '../lib/colors';
 
-type BtnVariant = 'primary' | 'success' | 'pink' | 'ghost' | 'star';
+type BtnVariant = 'primary' | 'orange' | 'success' | 'pink' | 'ghost' | 'star' | 'blue' | 'white';
 
 interface BtnProps extends TouchableOpacityProps {
   variant?: BtnVariant;
@@ -13,12 +13,15 @@ interface BtnProps extends TouchableOpacityProps {
   style?: ViewStyle;
 }
 
-const variantStyles: Record<BtnVariant, { bg: string; shadow: string; text: string }> = {
-  primary: { bg: Colors.primary,  shadow: Colors.primaryDark, text: '#fff' },
-  success: { bg: Colors.success,  shadow: Colors.successDark,  text: '#fff' },
-  pink:    { bg: Colors.pink,     shadow: Colors.pinkDark,     text: '#fff' },
-  ghost:   { bg: '#fff',          shadow: Colors.line,         text: Colors.ink },
-  star:    { bg: Colors.star,     shadow: Colors.starDark,     text: '#5A4515' },
+const variantStyles: Record<BtnVariant, { bg: string; shadow: string; text: string; border?: string }> = {
+  primary: { bg: Colors.purple,   shadow: Colors.purpleLight, text: '#fff' },
+  orange:  { bg: Colors.orange,   shadow: Colors.orangeLight, text: '#fff' },
+  success: { bg: Colors.success,  shadow: Colors.successDark, text: '#fff' },
+  pink:    { bg: Colors.pink,     shadow: Colors.pinkDark,    text: '#fff' },
+  star:    { bg: Colors.star,     shadow: Colors.starDark,    text: '#5A4515' },
+  blue:    { bg: Colors.blue,     shadow: '#5B73E8',          text: '#fff' },
+  ghost:   { bg: 'rgba(255,255,255,0.20)', shadow: 'transparent', text: '#fff', border: 'rgba(255,255,255,0.45)' },
+  white:   { bg: '#fff',          shadow: '#E5E7EB',          text: Colors.ink },
 };
 
 export function Btn({ variant = 'primary', label, small, loading, disabled, style, onPress, children, ...rest }: BtnProps) {
@@ -31,12 +34,17 @@ export function Btn({ variant = 'primary', label, small, loading, disabled, styl
     <TouchableOpacity
       {...rest}
       disabled={disabled || loading}
-      activeOpacity={0.8}
+      activeOpacity={0.82}
       onPress={handlePress}
       style={[
         styles.base,
         small && styles.small,
-        { backgroundColor: v.bg, shadowColor: v.shadow, borderColor: variant === 'ghost' ? Colors.line : 'transparent' },
+        {
+          backgroundColor: v.bg,
+          shadowColor: v.shadow !== 'transparent' ? v.shadow : undefined,
+          borderColor: v.border ?? 'transparent',
+          borderWidth: v.border ? 1.5 : 0,
+        },
         (disabled || loading) && { opacity: 0.45 },
         style,
       ]}
@@ -53,12 +61,15 @@ export function Btn({ variant = 'primary', label, small, loading, disabled, styl
 const styles = StyleSheet.create({
   base: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderRadius: 18, paddingVertical: 16, paddingHorizontal: 22,
-    minHeight: 58, borderWidth: 2,
-    shadowOffset: { width: 0, height: 5 }, shadowOpacity: 1, shadowRadius: 0,
-    elevation: 5,
+    borderRadius: 999,
+    paddingVertical: 18, paddingHorizontal: 28,
+    minHeight: 58,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  small: { paddingVertical: 10, paddingHorizontal: 16, minHeight: 42, borderRadius: 14 },
-  text: { fontFamily: 'System', fontWeight: '800', fontSize: 17, letterSpacing: 0.4, textTransform: 'uppercase' },
+  small: { paddingVertical: 11, paddingHorizontal: 20, minHeight: 44, borderRadius: 999 },
+  text: { fontWeight: '700', fontSize: 17, letterSpacing: 0.2 },
   textSm: { fontSize: 14 },
 });

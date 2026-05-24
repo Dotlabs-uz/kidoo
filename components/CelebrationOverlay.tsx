@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
-    backgroundColor: 'rgba(124,92,255,0.85)',
+    backgroundColor: 'rgba(209,73,0,0.92)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,

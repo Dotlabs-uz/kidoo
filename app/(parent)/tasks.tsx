@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Btn } from '../../components/Btn';
 import { CelebrationOverlay } from '../../components/CelebrationOverlay';
+import { GradientScreen } from '../../components/GradientScreen';
 import { Icon } from '../../components/Icon';
 import { ParentLockDialog } from '../../components/ParentLockDialog';
 import { StarGroup } from '../../components/StarGroup';
@@ -76,6 +77,7 @@ function TaskRow({ task, onApprove, onEdit, onDelete }: {
 
 export default function ParentTasksScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { family, tasks, approveTask, deleteTask, celebration, setCelebration, showLock, setShowLock } = useApp();
 
   const handleDelete = (id: string) => {
@@ -86,91 +88,94 @@ export default function ParentTasksScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={[styles.avatar, { backgroundColor: '#FFD23F33' }]}>
-          <Text style={{ fontSize: 22 }}>👋</Text>
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.greeting}>Привет,</Text>
-          <Text style={styles.name}>{family.parent_name}</Text>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <StatCard num={tasks.filter(t => t.status === 'pending').length} label="Активных" color={Colors.primary} />
-          <StatCard num={tasks.filter(t => t.status === 'review').length} label="На проверку" color={Colors.pink} />
-          <StatCard num={tasks.filter(t => t.status === 'done').length} label="Готово" color={Colors.success} />
+    <GradientScreen>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Привет,</Text>
+            <Text style={styles.name}>{family.parent_name} 👋</Text>
+          </View>
+          <TouchableOpacity onPress={() => setShowLock(true)} style={styles.lockBtn}>
+            <Icon name="switch" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Задания</Text>
-          <Btn label="Новое" small onPress={() => router.push('/create-task')}>
-            <Icon name="plus" size={16} color="#fff" />
-          </Btn>
-        </View>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 110 }]} showsVerticalScrollIndicator={false}>
+          <View style={styles.statsRow}>
+            <StatCard num={tasks.filter(t => t.status === 'pending').length} label="Активных" color={Colors.purple} />
+            <StatCard num={tasks.filter(t => t.status === 'review').length} label="На проверку" color={Colors.pink} />
+            <StatCard num={tasks.filter(t => t.status === 'done').length} label="Готово" color={Colors.success} />
+          </View>
 
-        {tasks.map(t => (
-          <TaskRow
-            key={t.id}
-            task={t}
-            onApprove={approveTask}
-            onEdit={(id) => router.push(`/edit-task?id=${id}`)}
-            onDelete={handleDelete}
-          />
-        ))}
-        <View style={{ height: 8 }} />
-      </ScrollView>
+          <View style={styles.card}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Задания</Text>
+              <Btn label="Новое" small onPress={() => router.push('/create-task')}>
+                <Icon name="plus" size={16} color="#fff" />
+              </Btn>
+            </View>
+
+            {tasks.length === 0 ? (
+              <Text style={styles.emptyText}>Заданий пока нет</Text>
+            ) : (
+              tasks.map(t => (
+                <TaskRow
+                  key={t.id}
+                  task={t}
+                  onApprove={approveTask}
+                  onEdit={(id) => router.push(`/edit-task?id=${id}`)}
+                  onDelete={handleDelete}
+                />
+              ))
+            )}
+          </View>
+
+          <View style={{ height: 16 }} />
+        </ScrollView>
+      </SafeAreaView>
 
       {celebration && <CelebrationOverlay stars={celebration.stars} onDone={() => setCelebration(null)} />}
       {showLock && <ParentLockDialog onCancel={() => setShowLock(false)} onUnlock={() => { setShowLock(false); router.replace('/(child)/tasks'); }} />}
-    </SafeAreaView>
+    </GradientScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bg },
   header: {
-    paddingHorizontal: 20, paddingTop: 8, paddingBottom: 14,
-    backgroundColor: '#fff', borderBottomWidth: 2, borderBottomColor: Colors.line,
-    flexDirection: 'row', alignItems: 'center', gap: 12,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16,
   },
-  avatar: { width: 48, height: 48, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
-  greeting: { fontSize: 12, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.5 },
-  name: { fontSize: 20, fontWeight: '800', color: Colors.ink },
-  scroll: { padding: 20 },
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 18 },
-  statCard: {
-    flex: 1, backgroundColor: '#fff',
-    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
-    borderRadius: 18, paddingVertical: 12, alignItems: 'center',
-    ...CardShadow,
+  greeting: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
+  name: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  lockBtn: {
+    width: 44, height: 44, borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center', justifyContent: 'center',
   },
+
+  scroll: { paddingHorizontal: 20, paddingBottom: 24 },
+
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 22, paddingVertical: 14, alignItems: 'center', ...CardShadow },
   statNum: { fontSize: 26, fontWeight: '900', lineHeight: 28 },
   statLabel: { fontSize: 10, fontWeight: '700', color: Colors.ink3, textTransform: 'uppercase', marginTop: 4 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  sectionTitle: { fontSize: 22, fontWeight: '800', color: Colors.ink },
-  taskCard: {
-    backgroundColor: '#fff', borderRadius: 28,
-    borderWidth: 1, borderColor: 'rgba(124,92,255,0.07)',
-    padding: 16, marginBottom: 10, gap: 10, ...CardShadow,
-  },
+
+  card: { backgroundColor: '#fff', borderRadius: 28, padding: 20, marginBottom: 16, ...CardShadow },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: Colors.ink },
+  emptyText: { fontSize: 14, fontWeight: '600', color: Colors.ink3, textAlign: 'center', paddingVertical: 12 },
+
+  taskCard: { borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 12, gap: 10 },
   taskRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   taskIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  taskTitle: { fontSize: 17, fontWeight: '800', color: Colors.ink, marginBottom: 2 },
+  taskTitle: { fontSize: 16, fontWeight: '800', color: Colors.ink, marginBottom: 2 },
   taskDue: { fontSize: 12, color: Colors.ink3, fontWeight: '700' },
   taskFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },
-  repeatBadge: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+  repeatBadge: { fontSize: 11, fontWeight: '700', color: Colors.purple },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actionBtn: {
-    width: 34, height: 34, borderRadius: 11, backgroundColor: Colors.bg,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: Colors.line,
-  },
+  actionBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.line },
   actionBtnDanger: { backgroundColor: '#FFF0F0', borderColor: '#FFCDD2' },
 });
