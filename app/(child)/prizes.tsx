@@ -54,11 +54,7 @@ export default function ChildPrizesScreen() {
   return (
     <GradientScreen>
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerCaption}>Магазин</Text>
-            <Text style={styles.headerTitle}>Мои призы</Text>
-          </View>
+        <View style={styles.pillRow}>
           <View style={styles.starPill}>
             <Text style={{ fontSize: 16 }}>⭐</Text>
             <Text style={styles.starPillText}>{child.stars}</Text>
@@ -77,12 +73,7 @@ export default function ChildPrizesScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 20,
-  },
-  headerCaption: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 2 },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  pillRow: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, alignItems: 'flex-end' },
   starPill: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 999,

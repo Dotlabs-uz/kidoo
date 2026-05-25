@@ -37,11 +37,7 @@ export default function ParentRewardsScreen() {
   return (
     <GradientScreen>
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerCaption}>Магазин</Text>
-            <Text style={styles.headerTitle}>Награды</Text>
-          </View>
+        <View style={styles.addRow}>
           <Btn label="Добавить" variant="ghost" small onPress={() => router.push('/add-reward')}>
             <Icon name="plus" size={16} color="#fff" />
           </Btn>
@@ -65,12 +61,7 @@ export default function ParentRewardsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 20,
-  },
-  headerCaption: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 2 },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
+  addRow: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, alignItems: 'flex-end' },
 
   scroll: { paddingHorizontal: 20, paddingBottom: 24 },
   card: { backgroundColor: '#fff', borderRadius: 28, padding: 20, marginBottom: 14, ...CardShadow },

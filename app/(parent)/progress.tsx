@@ -97,11 +97,6 @@ export default function ParentProgressScreen() {
   return (
     <GradientScreen>
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <Text style={styles.headerCaption}>Обзор</Text>
-          <Text style={styles.headerTitle}>Прогресс</Text>
-        </View>
-
         <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 110 }]} showsVerticalScrollIndicator={false}>
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
@@ -134,10 +129,6 @@ export default function ParentProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 20 },
-  headerCaption: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 2 },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
-
   scroll: { paddingHorizontal: 20, paddingBottom: 24 },
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },

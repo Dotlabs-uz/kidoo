@@ -12,7 +12,7 @@ interface MascotProps {
 
 const MOOD_IMAGES: Record<Mood, any> = {
   // transparent background — safe on any colored surface
-  wave:  require('../assets/elephant/cute-chubby-elephant-character--full-body--3-4-vie (1) Background Removed.png'),
+  wave:  require('../assets/elephant/hello.png'),
   cheer: require('../assets/elephant/cute-chubby-elephant-character--full-body--3-4-vie Background Removed.png'),
   // white background — fine on white/light card surfaces
   happy: require('../assets/elephant/hello.png'),

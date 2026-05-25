@@ -76,11 +76,6 @@ export default function ParentProfileScreen() {
   return (
     <GradientScreen>
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <Text style={styles.headerCaption}>Аккаунт</Text>
-          <Text style={styles.headerTitle}>Профиль</Text>
-        </View>
-
         <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 110 }]} showsVerticalScrollIndicator={false}>
           {/* Parent card */}
           <View style={styles.card}>
@@ -181,10 +176,6 @@ export default function ParentProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 20 },
-  headerCaption: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 2 },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
-
   scroll: { paddingHorizontal: 20, paddingBottom: 24 },
 
   card: { backgroundColor: '#fff', borderRadius: 28, padding: 20, marginBottom: 14, ...CardShadow, alignItems: 'center' },

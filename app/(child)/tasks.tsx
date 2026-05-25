@@ -58,9 +58,6 @@ export default function ChildTasksScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.greeting}>Привет,</Text>
-        <Text style={styles.name}>{child.name}! 👋</Text>
-
         <ScrollView
           contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 110 }]}
           showsVerticalScrollIndicator={false}
@@ -140,9 +137,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)',
   },
   coinText: { fontSize: 17, fontWeight: '800', color: '#fff' },
-
-  greeting: { fontSize: 16, fontWeight: '500', color: Colors.textMuted, paddingHorizontal: 24, marginTop: 14 },
-  name: { fontSize: 30, fontWeight: '800', color: '#fff', paddingHorizontal: 24, marginBottom: 20, letterSpacing: -0.5 },
 
   scroll: { paddingHorizontal: 20, paddingBottom: 24 },
 

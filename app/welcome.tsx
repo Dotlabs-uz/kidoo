@@ -18,7 +18,7 @@ export default function WelcomeScreen() {
 
         {/* Mascot */}
         <View style={styles.mascotWrap}>
-          <Mascot mood="wave" size={260} />
+          <Mascot mood="happy" size={260} />
         </View>
 
         {/* Title */}

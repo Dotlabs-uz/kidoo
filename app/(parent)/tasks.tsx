@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Btn } from '../../components/Btn';
@@ -9,8 +9,8 @@ import { Icon } from '../../components/Icon';
 import { ParentLockDialog } from '../../components/ParentLockDialog';
 import { StarGroup } from '../../components/StarGroup';
 import { useApp } from '../../context/AppContext';
-import { CardShadow, Colors } from '../../lib/colors';
-import { Task } from '../../types';
+import { AVATARS, CardShadow, Colors } from '../../lib/colors';
+import { Child, Task } from '../../types';
 
 function StatCard({ num, label, color }: { num: number; label: string; color: string }) {
   return (
@@ -75,10 +75,59 @@ function TaskRow({ task, onApprove, onEdit, onDelete }: {
   );
 }
 
+function ChildFilterBar({ children, tasks, selectedId, onSelect }: {
+  children: Child[];
+  tasks: Task[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+}) {
+  if (children.length === 0) return null;
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.filterScroll}
+      contentContainerStyle={styles.filterBar}
+    >
+      {children.map(kid => {
+        const reviewCount = tasks.filter(t => t.child_id === kid.id && t.status === 'review').length;
+        const avatarEmoji = AVATARS.find(a => a.id === kid.avatar)?.emoji ?? '🧒';
+        const isActive = selectedId === kid.id;
+        return (
+          <TouchableOpacity
+            key={kid.id}
+            style={[styles.filterChip, isActive && styles.filterChipActive]}
+            onPress={() => onSelect(kid.id)}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.filterChipEmoji}>{avatarEmoji}</Text>
+            <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
+              {kid.name}
+            </Text>
+            {reviewCount > 0 && (
+              <View style={styles.reviewBadge}>
+                <Text style={styles.reviewBadgeText}>{reviewCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
 export default function ParentTasksScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { family, tasks, approveTask, deleteTask, celebration, setCelebration, showLock, setShowLock } = useApp();
+  const { family, children, tasks, approveTask, deleteTask, celebration, setCelebration, showLock, setShowLock } = useApp();
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(
+    children.length > 0 ? children[0].id : null
+  );
+
+  const filteredTasks = selectedChildId
+    ? tasks.filter(t => t.child_id === selectedChildId)
+    : tasks;
 
   const handleDelete = (id: string) => {
     Alert.alert('Удалить задание?', 'Это действие нельзя отменить.', [
@@ -90,21 +139,18 @@ export default function ParentTasksScreen() {
   return (
     <GradientScreen>
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Привет,</Text>
-            <Text style={styles.name}>{family.parent_name} 👋</Text>
-          </View>
-          <TouchableOpacity onPress={() => setShowLock(true)} style={styles.lockBtn}>
-            <Icon name="switch" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        <ChildFilterBar
+          children={children}
+          tasks={tasks}
+          selectedId={selectedChildId}
+          onSelect={setSelectedChildId}
+        />
 
         <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 110 }]} showsVerticalScrollIndicator={false}>
           <View style={styles.statsRow}>
-            <StatCard num={tasks.filter(t => t.status === 'pending').length} label="Активных" color={Colors.purple} />
-            <StatCard num={tasks.filter(t => t.status === 'review').length} label="На проверку" color={Colors.pink} />
-            <StatCard num={tasks.filter(t => t.status === 'done').length} label="Готово" color={Colors.success} />
+            <StatCard num={filteredTasks.filter(t => t.status === 'pending').length} label="Активных" color={Colors.purple} />
+            <StatCard num={filteredTasks.filter(t => t.status === 'review').length} label="На проверку" color={Colors.pink} />
+            <StatCard num={filteredTasks.filter(t => t.status === 'done').length} label="Готово" color={Colors.success} />
           </View>
 
           <View style={styles.card}>
@@ -115,10 +161,10 @@ export default function ParentTasksScreen() {
               </Btn>
             </View>
 
-            {tasks.length === 0 ? (
+            {filteredTasks.length === 0 ? (
               <Text style={styles.emptyText}>Заданий пока нет</Text>
             ) : (
-              tasks.map(t => (
+              filteredTasks.map(t => (
                 <TaskRow
                   key={t.id}
                   task={t}
@@ -141,18 +187,6 @@ export default function ParentTasksScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16,
-  },
-  greeting: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
-  name: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: -0.5 },
-  lockBtn: {
-    width: 44, height: 44, borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.20)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)',
-    alignItems: 'center', justifyContent: 'center',
-  },
 
   scroll: { paddingHorizontal: 20, paddingBottom: 24 },
 
@@ -178,4 +212,23 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actionBtn: { width: 34, height: 34, borderRadius: 11, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.line },
   actionBtnDanger: { backgroundColor: '#FFF0F0', borderColor: '#FFCDD2' },
+
+  filterScroll: { height: 62, flexGrow: 0 },
+  filterBar: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 14, gap: 8, alignItems: 'center' },
+  filterChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    height: 40, paddingHorizontal: 14, borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)',
+  },
+  filterChipActive: {
+    backgroundColor: '#fff', borderColor: '#fff',
+  },
+  filterChipEmoji: { fontSize: 15 },
+  filterChipText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.90)' },
+  filterChipTextActive: { color: Colors.ink },
+  reviewBadge: {
+    minWidth: 18, height: 18, borderRadius: 999,
+    backgroundColor: Colors.pink, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+  },
+  reviewBadgeText: { fontSize: 10, fontWeight: '900', color: '#fff' },
 });

@@ -271,7 +271,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
   };
 
   const addReward = async (reward: Reward) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('rewards')
       .insert({
         family_id: family.id,
@@ -282,6 +282,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
       })
       .select('*')
       .single();
+    if (error) throw error;
     if (data) setRewards(prev => [data, ...prev]);
   };
 

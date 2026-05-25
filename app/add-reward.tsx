@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../components/Btn';
 import { GradientScreen } from '../components/GradientScreen';
@@ -13,14 +13,23 @@ const PRESETS = [5, 10, 20, 50];
 
 export default function AddRewardScreen() {
   const router = useRouter();
-  const { addReward } = useApp();
+  const { family, addReward } = useApp();
   const [title, setTitle] = useState('');
   const [cost, setCost] = useState(10);
   const [icon, setIcon] = useState('🎁');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    addReward({ id: 'r' + Date.now(), family_id: 'f1', title, cost, icon, color: Colors.pink });
-    router.back();
+  const handleSave = async () => {
+    if (!title.trim()) return;
+    setSaving(true);
+    try {
+      await addReward({ id: '', family_id: family.id, title: title.trim(), cost, icon, color: Colors.pink });
+      router.back();
+    } catch (e: any) {
+      Alert.alert('Ошибка', e?.message ?? 'Не удалось сохранить приз');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -68,7 +77,7 @@ export default function AddRewardScreen() {
             </View>
           </View>
 
-          <Btn label="Добавить приз" variant="pink" disabled={!title} onPress={handleSave} style={{ width: '100%' }} />
+          <Btn label={saving ? 'Сохраняем...' : 'Добавить приз'} variant="pink" disabled={!title.trim() || saving} onPress={handleSave} style={{ width: '100%' }} />
           <View style={{ height: 16 }} />
         </ScrollView>
       </SafeAreaView>
