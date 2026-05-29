@@ -26,7 +26,7 @@ export function CelebrationOverlay({ stars, onDone }: CelebrationOverlayProps) {
       <Animated.View style={[styles.inner, { transform: [{ scale }], opacity }]}>
         <Mascot mood="cheer" size={180} color={Colors.primary} />
         <Text style={styles.title}>Молодец!</Text>
-        <Text style={styles.sub}>Бола в восторге 🎉</Text>
+        <Text style={styles.sub}>Kidoo в восторге 🎉</Text>
         <View style={styles.pill}>
           <Text style={styles.pillText}>+{stars} ⭐</Text>
         </View>

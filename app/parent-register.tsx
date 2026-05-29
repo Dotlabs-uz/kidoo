@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '../components/Btn';
 import { GradientScreen } from '../components/GradientScreen';
@@ -63,9 +63,19 @@ export default function ParentRegisterScreen() {
 
           <Text style={styles.hint}>После регистрации появится семейный код для детей</Text>
 
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://organic-jupiter-1d1.notion.site/Kidoo-36f2dea599bc80f29e34e87ec7cef6e6')}
+            style={styles.privacyLink}
+          >
+            <Text style={styles.privacyText}>
+              Регистрируясь, вы принимаете{' '}
+              <Text style={styles.privacyBold}>Политику конфиденциальности</Text>
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={() => router.replace('/parent-login')} style={styles.loginLink}>
             <Text style={styles.loginLinkText}>Уже есть аккаунт? </Text>
-            <Text style={[styles.loginLinkText, { color: Colors.purple, fontWeight: '800' }]}>Войти</Text>
+            <Text style={[styles.loginLinkText, { color: '#fff', fontWeight: '800' }]}>Войти</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -94,6 +104,9 @@ const styles = StyleSheet.create({
   },
 
   hint: { textAlign: 'center', fontSize: 12, fontWeight: '600', color: Colors.textMuted, marginBottom: 16 },
+  privacyLink: { marginBottom: 20, paddingHorizontal: 8 },
+  privacyText: { textAlign: 'center', fontSize: 12, fontWeight: '500', color: Colors.textMuted, lineHeight: 18 },
+  privacyBold: { fontWeight: '800', color: '#fff', textDecorationLine: 'underline' },
   loginLink: { flexDirection: 'row', justifyContent: 'center' },
   loginLinkText: { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
 });

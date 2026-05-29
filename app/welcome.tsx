@@ -22,8 +22,8 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>Добро пожаловать!</Text>
-        <Text style={styles.subtitle}>Кто будет использовать приложение?</Text>
+        <Text style={styles.title}>Мотивируй. Хвали.{'\n'}Расти вместе.</Text>
+        <Text style={styles.subtitle}>Ставьте цели, выполняйте задания и зарабатывайте призы</Text>
 
         {/* Buttons */}
         <View style={styles.btns}>

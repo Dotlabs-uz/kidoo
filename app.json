@@ -10,15 +10,12 @@
 		"splash": {
 			"image": "./assets/splash-icon.png",
 			"resizeMode": "contain",
-			"backgroundColor": "#EDE7FF"
+			"backgroundColor": "#FF5500"
 		},
 		"ios": {
 			"supportsTablet": false,
 			"bundleIdentifier": "com.dotlabs.kidoo",
-			"buildNumber": "1",
-			"infoPlist": {
-				"NSFaceIDUsageDescription": "Используется для защиты родительского режима"
-			}
+			"buildNumber": "1"
 		},
 		"android": {
 			"adaptiveIcon": {

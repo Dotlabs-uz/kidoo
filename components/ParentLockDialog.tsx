@@ -51,7 +51,7 @@ export function ParentLockDialog({ onCancel, onUnlock }: ParentLockDialogProps) 
           ? <ActivityIndicator color={Colors.primary} style={{ marginBottom: 8 }} />
           : <Btn label="Войти" onPress={submit} disabled={!pass} style={{ marginBottom: 8 }} />
         }
-        <Btn label="Отмена" variant="ghost" onPress={onCancel} small />
+        <Btn label="Отмена" variant="white" onPress={onCancel} small />
       </View>
     </View>
   );

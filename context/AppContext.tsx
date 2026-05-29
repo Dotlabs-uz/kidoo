@@ -10,6 +10,8 @@ interface Celebration {
 
 interface AppState {
   loading: boolean;
+  networkError: boolean;
+  retryInit: () => void;
   mode: 'parent' | 'child' | null;
   parentEmail: string;
 
@@ -50,6 +52,7 @@ const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children: reactChildren }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
+  const [networkError, setNetworkError] = useState(false);
   const [mode, setMode] = useState<'parent' | 'child' | null>(null);
   const [parentEmail, setParentEmail] = useState('');
   const [family, setFamilyState] = useState<Family>(EMPTY_FAMILY);
@@ -75,39 +78,54 @@ export function AppProvider({ children: reactChildren }: { children: React.React
     if (rewardsRes.data) setRewards(rewardsRes.data);
   };
 
-  // Restore session on app start
-  useEffect(() => {
-    const init = async () => {
-      // 1. Check parent Supabase session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: fam } = await supabase.from('families').select('*').eq('user_id', session.user.id).single();
-        if (fam) {
-          await loadFamilyData(fam.id);
-          setParentEmail(session.user.email ?? '');
-          setMode('parent');
-          setLoading(false);
-          return;
-        }
-      }
-
-      // 2. Check child session in AsyncStorage
-      const childSession = await storage.loadChild();
-      if (childSession) {
-        await loadFamilyData(childSession.familyId);
-        setActiveChildId(childSession.childId);
-        setMode('child');
+  const doInit = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: fam } = await supabase.from('families').select('*').eq('user_id', session.user.id).single();
+      if (fam) {
+        await loadFamilyData(fam.id);
+        setParentEmail(session.user.email ?? '');
+        setMode('parent');
         setLoading(false);
         return;
       }
+    }
 
-      setMode(null);
+    const childSession = await storage.loadChild();
+    if (childSession) {
+      await loadFamilyData(childSession.familyId);
+      setActiveChildId(childSession.childId);
+      setMode('child');
       setLoading(false);
-    };
+      return;
+    }
 
-    init();
+    setMode(null);
+    setLoading(false);
+  };
 
-    // Listen for auth state changes (parent sign-in / sign-out)
+  const runInit = async () => {
+    try {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 8000)
+      );
+      await Promise.race([doInit(), timeout]);
+    } catch {
+      setNetworkError(true);
+      setLoading(false);
+    }
+  };
+
+  const retryInit = () => {
+    setNetworkError(false);
+    setLoading(true);
+    runInit();
+  };
+
+  // Restore session on app start
+  useEffect(() => {
+    runInit();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         const { data: fam } = await supabase.from('families').select('*').eq('user_id', session.user.id).single();
@@ -237,10 +255,21 @@ export function AppProvider({ children: reactChildren }: { children: React.React
 
   const approveTask = async (id: string) => {
     const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
     await supabase.from('tasks').update({ status: 'done' }).eq('id', id);
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'done' } : t));
 
-    if (task?.repeat) {
+    // Stars are awarded here (after parent approval), not when child submits
+    const assignedChild = childrenList.find(c => c.id === task.child_id);
+    if (assignedChild) {
+      const newStars = assignedChild.stars + task.stars;
+      await supabase.from('children').update({ stars: newStars }).eq('id', assignedChild.id);
+      setChildrenList(prev => prev.map(c => c.id === assignedChild.id ? { ...c, stars: newStars } : c));
+      setCelebration({ stars: task.stars });
+    }
+
+    if (task.repeat) {
       const newDue = task.repeat === 'daily' ? 'Сегодня' : 'Эта неделя';
       await addTask({ ...task, id: 't' + Date.now(), status: 'pending', due: newDue });
     }
@@ -252,10 +281,6 @@ export function AppProvider({ children: reactChildren }: { children: React.React
 
     await supabase.from('tasks').update({ status: 'review' }).eq('id', id);
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'review' } : t));
-
-    const newStars = child.stars + task.stars;
-    await supabase.from('children').update({ stars: newStars }).eq('id', child.id);
-    setChildrenList(prev => prev.map(c => c.id === child.id ? { ...c, stars: newStars } : c));
     setCelebration({ stars: task.stars });
   };
 
@@ -263,11 +288,8 @@ export function AppProvider({ children: reactChildren }: { children: React.React
     const task = tasks.find(t => t.id === id);
     if (!task || !child.id) return;
 
-    const newStars = Math.max(0, child.stars - task.stars);
     await supabase.from('tasks').update({ status: 'pending' }).eq('id', id);
-    await supabase.from('children').update({ stars: newStars }).eq('id', child.id);
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'pending' } : t));
-    setChildrenList(prev => prev.map(c => c.id === child.id ? { ...c, stars: newStars } : c));
   };
 
   const addReward = async (reward: Reward) => {
@@ -321,7 +343,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
 
   return (
     <AppContext.Provider value={{
-      loading, mode, parentEmail,
+      loading, networkError, retryInit, mode, parentEmail,
       family, children: childrenList, child, tasks, rewards, celebration, showLock,
       registerParent, loginParent, verifyParentPassword, loginAsChild, logout,
       setFamily, setChild, addChild, setCelebration, setShowLock,
