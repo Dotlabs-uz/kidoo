@@ -48,6 +48,11 @@ function TaskRow({ task, onApprove, onEdit, onDelete }: {
               <Text style={styles.repeatBadge}>{task.repeat === 'daily' ? '🔁 ежедневно' : '📅 еженедельно'}</Text>
             )}
           </View>
+          {task.created_at && (
+            <Text style={styles.taskCreatedAt}>
+              Создано {new Date(task.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          )}
         </View>
         <StarGroup count={task.stars} size={16} />
       </View>
@@ -117,6 +122,31 @@ function ChildFilterBar({ children, tasks, selectedId, onSelect }: {
   );
 }
 
+function groupTasksByDate(tasks: Task[]): { label: string; tasks: Task[] }[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const getDay = (t: Task) => {
+    if (!t.created_at) return 'earlier';
+    const d = new Date(t.created_at);
+    d.setHours(0, 0, 0, 0);
+    if (d.getTime() === today.getTime()) return 'today';
+    if (d.getTime() === yesterday.getTime()) return 'yesterday';
+    return 'earlier';
+  };
+
+  const groups: Record<string, Task[]> = { today: [], yesterday: [], earlier: [] };
+  tasks.forEach(t => groups[getDay(t)].push(t));
+
+  return [
+    { label: 'Сегодня', tasks: groups.today },
+    { label: 'Вчера', tasks: groups.yesterday },
+    { label: 'Ранее', tasks: groups.earlier },
+  ].filter(g => g.tasks.length > 0);
+}
+
 export default function ParentTasksScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -128,6 +158,8 @@ export default function ParentTasksScreen() {
   const filteredTasks = selectedChildId
     ? tasks.filter(t => t.child_id === selectedChildId)
     : tasks;
+
+  const groups = groupTasksByDate(filteredTasks);
 
   const handleDelete = (id: string) => {
     Alert.alert('Удалить задание?', 'Это действие нельзя отменить.', [
@@ -164,14 +196,23 @@ export default function ParentTasksScreen() {
             {filteredTasks.length === 0 ? (
               <Text style={styles.emptyText}>Заданий пока нет</Text>
             ) : (
-              filteredTasks.map(t => (
-                <TaskRow
-                  key={t.id}
-                  task={t}
-                  onApprove={approveTask}
-                  onEdit={(id) => router.push(`/edit-task?id=${id}`)}
-                  onDelete={handleDelete}
-                />
+              groups.map((group, gi) => (
+                <View key={group.label}>
+                  <View style={[styles.groupHeader, gi > 0 && { marginTop: 8 }]}>
+                    <Text style={styles.groupLabel}>{group.label}</Text>
+                    <View style={styles.groupLine} />
+                    <Text style={styles.groupCount}>{group.tasks.length}</Text>
+                  </View>
+                  {group.tasks.map(t => (
+                    <TaskRow
+                      key={t.id}
+                      task={t}
+                      onApprove={approveTask}
+                      onEdit={(id) => router.push(`/edit-task?id=${id}`)}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </View>
               ))
             )}
           </View>
@@ -200,11 +241,17 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: '800', color: Colors.ink },
   emptyText: { fontSize: 14, fontWeight: '600', color: Colors.ink3, textAlign: 'center', paddingVertical: 12 },
 
+  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4, marginTop: 4 },
+  groupLabel: { fontSize: 11, fontWeight: '800', color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 0.6 },
+  groupLine: { flex: 1, height: 1, backgroundColor: Colors.line },
+  groupCount: { fontSize: 11, fontWeight: '700', color: Colors.ink4 },
+
   taskCard: { borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 12, gap: 10 },
   taskRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   taskIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   taskTitle: { fontSize: 16, fontWeight: '800', color: Colors.ink, marginBottom: 2 },
   taskDue: { fontSize: 12, color: Colors.ink3, fontWeight: '700' },
+  taskCreatedAt: { fontSize: 11, color: Colors.ink4, fontWeight: '500', marginTop: 2 },
   taskFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   badgeText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },

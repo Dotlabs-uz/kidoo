@@ -32,6 +32,9 @@ interface AppState {
   setFamily: (f: Family) => void;
   setChild: (c: Child) => void;
   addChild: (c: Child) => Promise<void>;
+  updateChild: (id: string, name: string, avatar: string) => Promise<void>;
+  deleteChild: (id: string) => Promise<void>;
+  regenerateFamilyCode: () => Promise<void>;
   setCelebration: (c: Celebration | null) => void;
   setShowLock: (v: boolean) => void;
 
@@ -331,6 +334,29 @@ export function AppProvider({ children: reactChildren }: { children: React.React
     if (data) setChildrenList(prev => [...prev, data]);
   };
 
+  const updateChild = async (id: string, name: string, avatar: string) => {
+    const { data } = await supabase
+      .from('children')
+      .update({ name, avatar })
+      .eq('id', id)
+      .select('*')
+      .single();
+    if (data) setChildrenList(prev => prev.map(c => c.id === id ? data : c));
+  };
+
+  const deleteChild = async (id: string) => {
+    await supabase.from('tasks').delete().eq('child_id', id);
+    await supabase.from('children').delete().eq('id', id);
+    setChildrenList(prev => prev.filter(c => c.id !== id));
+    setTasks(prev => prev.filter(t => t.child_id !== id));
+  };
+
+  const regenerateFamilyCode = async () => {
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    await supabase.from('families').update({ code: newCode }).eq('id', family.id);
+    setFamilyState(prev => ({ ...prev, code: newCode }));
+  };
+
   // Kept for compatibility — prefer loginAsChild / registerParent
   const setFamily = (f: Family) => setFamilyState(f);
   const setChild = (c: Child) => {
@@ -346,7 +372,7 @@ export function AppProvider({ children: reactChildren }: { children: React.React
       loading, networkError, retryInit, mode, parentEmail,
       family, children: childrenList, child, tasks, rewards, celebration, showLock,
       registerParent, loginParent, verifyParentPassword, loginAsChild, logout,
-      setFamily, setChild, addChild, setCelebration, setShowLock,
+      setFamily, setChild, addChild, updateChild, deleteChild, regenerateFamilyCode, setCelebration, setShowLock,
       addTask, updateTask, deleteTask, approveTask, completeChildTask, undoChildTask, addReward, deleteReward, claimPrize,
     }}>
       {reactChildren}

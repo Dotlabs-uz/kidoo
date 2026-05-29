@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AvatarCircle } from '../../components/AvatarCircle';
 import { GradientScreen } from '../../components/GradientScreen';
@@ -9,11 +9,15 @@ import { useApp } from '../../context/AppContext';
 import { CardShadow, Colors } from '../../lib/colors';
 import { Child, Task } from '../../types';
 
+const DONE_PREVIEW = 4;
+
 function ChildProgressCard({ child, tasks }: { child: Child; tasks: Task[] }) {
+  const [showAllDone, setShowAllDone] = useState(false);
   const childTasks = tasks.filter(t => t.child_id === child.id);
   const done = childTasks.filter(t => t.status === 'done');
   const review = childTasks.filter(t => t.status === 'review');
   const pending = childTasks.filter(t => t.status === 'pending');
+  const visibleDone = showAllDone ? done : done.slice(0, DONE_PREVIEW);
 
   return (
     <View style={styles.childCard}>
@@ -47,7 +51,7 @@ function ChildProgressCard({ child, tasks }: { child: Child; tasks: Task[] }) {
       {done.length > 0 && (
         <>
           <Text style={styles.doneLabel}>Выполненные задания</Text>
-          {done.map(t => (
+          {visibleDone.map(t => (
             <View key={t.id} style={styles.taskRow}>
               <View style={styles.checkIcon}>
                 <Icon name="check" size={14} color="#1A8048" />
@@ -59,6 +63,14 @@ function ChildProgressCard({ child, tasks }: { child: Child; tasks: Task[] }) {
               <StarGroup count={t.stars} size={13} />
             </View>
           ))}
+          {done.length > DONE_PREVIEW && (
+            <TouchableOpacity onPress={() => setShowAllDone(v => !v)} style={styles.showMoreBtn}>
+              <Text style={styles.showMoreText}>
+                {showAllDone ? 'Скрыть' : `Показать все ${done.length}`}
+              </Text>
+              <Text style={styles.showMoreArrow}>{showAllDone ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+          )}
         </>
       )}
 
@@ -145,6 +157,10 @@ const styles = StyleSheet.create({
   childMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   childMetaText: { fontSize: 12, fontWeight: '700', color: Colors.ink2 },
   childMetaDot: { fontSize: 12, color: Colors.ink3 },
+
+  showMoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, marginTop: 4, borderRadius: 12, backgroundColor: Colors.bg },
+  showMoreText: { fontSize: 13, fontWeight: '700', color: Colors.ink2 },
+  showMoreArrow: { fontSize: 10, color: Colors.ink3 },
 
   miniStats: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   miniStat: { flex: 1, borderRadius: 16, paddingVertical: 10, alignItems: 'center' },
